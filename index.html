@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Ladder Lab</title>
+    <style>
+        :root { --primary: #00d4ff; --bg: #0f172a; --ladder: #64748b; --success: #22c55e; }
+        body { font-family: 'Courier New', Courier, monospace; background: var(--bg); color: white; text-align: center; }
+        .lab-container { max-width: 500px; margin: auto; padding: 20px; border: 2px solid var(--primary); border-radius: 10px; background: #1e293b; }
+        
+        .ladder-area { position: relative; margin: 40px auto; width: 200px; display: flex; flex-direction: column-reverse; gap: 20px; border-left: 10px solid var(--ladder); border-right: 10px solid var(--ladder); padding: 20px; }
+        
+        .rung { background: #334155; padding: 10px; border-radius: 5px; font-size: 1.8rem; font-weight: bold; letter-spacing: 5px; border-bottom: 4px solid #000; }
+        .rung.current { border: 2px solid var(--primary); background: #1e293b; color: var(--primary); }
+        .rung.locked { color: #475569; }
+        
+        .keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 20px; }
+        button { padding: 10px; border-radius: 5px; border: none; background: var(--primary); font-weight: bold; cursor: pointer; }
+        button:disabled { background: #334155; cursor: not-allowed; }
+        
+        #hint { margin: 15px; color: #fbbf24; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="lab-container">
+    <h1>🧪 Word Ladder Lab</h1>
+    <p>Change one letter to climb the ladder!</p>
+    
+    <div class="ladder-area" id="ladder">
+        </div>
+
+    <div id="hint">Next word: ...</div>
+    <div class="keyboard" id="keyboard"></div>
+    
+    <button id="reset" onclick="location.reload()" style="margin-top:20px; background: #ef4444; color: white;">Restart Experiment</button>
+</div>
+
+<script>
+    const chains = [
+        { word: "CAT", hint: "Start word" },
+        { word: "HAT", hint: "Something you wear on your head" },
+        { word: "HOT", hint: "Opposite of cold" },
+        { word: "POT", hint: "Used for cooking soup" },
+        { word: "DOT", hint: "A tiny circle" }
+    ];
+
+    let currentStep = 1;
+
+    function init() {
+        renderLadder();
+        renderKeyboard();
+    }
+
+    function renderLadder() {
+        const area = document.getElementById('ladder');
+        area.innerHTML = "";
+        chains.forEach((step, index) => {
+            let displayWord = step.word;
+            let cssClass = "rung";
+
+            if (index > currentStep) {
+                displayWord = "???";
+                cssClass += " locked";
+            } else if (index === currentStep) {
+                // Show the previous word but with one blank where the change happens
+                const prev = chains[index-1].word;
+                displayWord = prev.split('').map((char, i) => char === step.word[i] ? char : "_").join("");
+                cssClass += " current";
+                document.getElementById('hint').innerText = "HINT: " + step.hint;
+            }
+
+            area.innerHTML += `<div class="${cssClass}">${displayWord}</div>`;
+        });
+    }
+
+    function renderKeyboard() {
+        const kb = document.getElementById('keyboard');
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(l => {
+            kb.innerHTML += `<button onclick="checkLetter('${l}')">${l}</button>`;
+        });
+    }
+
+    function checkLetter(l) {
+        const targetWord = chains[currentStep].word;
+        const prevWord = chains[currentStep - 1].word;
+        
+        // Find which position changed
+        let changeIndex = -1;
+        for(let i=0; i<targetWord.length; i++) {
+            if(targetWord[i] !== prevWord[i]) changeIndex = i;
+        }
+
+        if (l === targetWord[changeIndex]) {
+            currentStep++;
+            if (currentStep < chains.length) {
+                renderLadder();
+            } else {
+                document.getElementById('ladder').innerHTML = "<h2 style='color:#22c55e'>TOP REACHED!</h2>";
+                document.getElementById('hint').innerText = "Experiment Successful!";
+            }
+        } else {
+            document.getElementById('hint').innerText = "Wrong chemical! Try again.";
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
