@@ -3,106 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Ladder Lab</title>
+    <title>Word Ladder Lab - Phoneme Substitution</title>
     <style>
-        :root { --primary: #00d4ff; --bg: #0f172a; --ladder: #64748b; --success: #22c55e; }
-        body { font-family: 'Courier New', Courier, monospace; background: var(--bg); color: white; text-align: center; }
-        .lab-container { max-width: 500px; margin: auto; padding: 20px; border: 2px solid var(--primary); border-radius: 10px; background: #1e293b; }
+        :root { 
+            --primary: #00d4ff; 
+            --bg: #0f172a; 
+            --ladder: #64748b; 
+            --success: #22c55e;
+            --error: #ef4444; 
+        }
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            background: var(--bg); 
+            color: white; 
+            text-align: center; 
+            padding: 20px; 
+        }
+        .lab-container { 
+            max-width: 550px; 
+            margin: auto; 
+            padding: 25px; 
+            border: 4px solid var(--primary); 
+            border-radius: 15px; 
+            background: #1e293b; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
         
-        .ladder-area { position: relative; margin: 40px auto; width: 200px; display: flex; flex-direction: column-reverse; gap: 20px; border-left: 10px solid var(--ladder); border-right: 10px solid var(--ladder); padding: 20px; }
+        /* Ladder Structure */
+        .ladder-area { 
+            position: relative; 
+            margin: 40px auto; 
+            width: 250px; 
+            display: flex; 
+            flex-direction: column-reverse; /* Builds ladder from bottom up */
+            gap: 15px; 
+            border-left: 12px solid var(--ladder); 
+            border-right: 12px solid var(--ladder); 
+            padding: 10px 0; 
+            border-radius: 5px;
+        }
         
-        .rung { background: #334155; padding: 10px; border-radius: 5px; font-size: 1.8rem; font-weight: bold; letter-spacing: 5px; border-bottom: 4px solid #000; }
-        .rung.current { border: 2px solid var(--primary); background: #1e293b; color: var(--primary); }
-        .rung.locked { color: #475569; }
+        .rung { 
+            background: #334155; 
+            padding: 15px 10px; 
+            border-radius: 5px; 
+            font-size: 2rem; 
+            font-weight: bold; 
+            letter-spacing: 8px; 
+            border-bottom: 5px solid #000; 
+            transition: 0.3s;
+        }
+        .rung.current { 
+            border: 3px solid var(--primary); 
+            background: #0f172a; 
+            color: var(--primary); 
+        }
+        .rung.locked { 
+            color: #475569; 
+            background: #2d384c;
+        }
         
-        .keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 20px; }
-        button { padding: 10px; border-radius: 5px; border: none; background: var(--primary); font-weight: bold; cursor: pointer; }
-        button:disabled { background: #334155; cursor: not-allowed; }
+        /* Keyboard */
+        .keyboard { 
+            display: grid; 
+            grid-template-columns: repeat(9, 1fr); 
+            gap: 8px; 
+            max-width: 450px; 
+            margin: 20px auto; 
+        }
+        button { 
+            padding: 12px; 
+            border-radius: 6px; 
+            border: none; 
+            background: var(--primary); 
+            font-weight: bold; 
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        button:hover {
+            background: #4de0ff;
+        }
+        button:disabled { 
+            background: #334155; 
+            cursor: not-allowed; 
+            opacity: 0.5;
+        }
         
-        #hint { margin: 15px; color: #fbbf24; font-weight: bold; }
+        #hint { 
+            margin: 15px; 
+            font-size: 1.2rem;
+            color: #fbbf24; 
+            font-weight: bold; 
+        }
+        #message {
+            height: 30px;
+            font-weight: bold;
+        }
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 1.3rem;
+            margin-top: 15px;
+            background: var(--success);
+            color: white;
+        }
     </style>
 </head>
 <body>
 
 <div class="lab-container">
     <h1>🧪 Word Ladder Lab</h1>
-    <p>Change one letter to climb the ladder!</p>
+    <p>Mission: Change one sound to climb the ladder.</p>
     
     <div class="ladder-area" id="ladder">
         </div>
 
-    <div id="hint">Next word: ...</div>
+    <div id="message"></div>
+    <div id="hint"></div>
     <div class="keyboard" id="keyboard"></div>
     
-    <button id="reset" onclick="location.reload()" style="margin-top:20px; background: #ef4444; color: white;">Restart Experiment</button>
+    <button id="nextBtn" class="hidden btn-large" onclick="loadNextLadder()">NEXT LAB ➔</button>
 </div>
 
 <script>
-    const chains = [
-        { word: "CAT", hint: "Start word" },
-        { word: "HAT", hint: "Something you wear on your head" },
-        { word: "HOT", hint: "Opposite of cold" },
-        { word: "POT", hint: "Used for cooking soup" },
-        { word: "DOT", hint: "A tiny circle" }
+    // --- DATABASE: Multi-Ladder Structure ---
+    const ladders = [
+        // Ladder Set 1: A-O-T Chain (Change Initial and Medial Vowel)
+        [
+            { word: "CAT", hint: "Start word: A common pet" },
+            { word: "HAT", hint: "Climb 1: Something you wear on your head" },
+            { word: "HOT", hint: "Climb 2: Opposite of cold" },
+            { word: "POT", hint: "Climb 3: Used for cooking soup" },
+            { word: "DOT", hint: "Climb 4: A tiny circle" }
+        ],
+        // Ladder Set 2: FIN -> FAN Chain (Change Initial and Medial Vowel)
+        [
+            { word: "FIN", hint: "Start word: The part of a fish used for swimming" },
+            { word: "PIN", hint: "Climb 1: Used to hold paper or fabric together" },
+            { word: "PAN", hint: "Climb 2: A flat metal dish for cooking" },
+            { word: "MAN", hint: "Climb 3: An adult male person" },
+            { word: "FAN", hint: "Climb 4: Used to cool off" }
+        ],
+        // Ladder Set 3: MUG -> MAT Chain (Change Medial Vowel)
+        [
+            { word: "MUG", hint: "Start word: A large drinking cup" },
+            { word: "MOP", hint: "Climb 1: Used to clean the floor" },
+            { word: "MAP", hint: "Climb 2: Shows you where to go" },
+            { word: "MIP", hint: "Climb 3: *Nonsense Word for practice*" }, 
+            { word: "MAT", hint: "Climb 4: A piece of fabric placed on the floor" }
+        ]
     ];
+    // --- END DATABASE ---
 
-    let currentStep = 1;
+    let currentLadderIndex = 0;
+    let currentStep = 0; // Tracks the rung the student is trying to solve (starts at 1)
+    let activeLadder = [];
 
     function init() {
+        // Randomly select a starting ladder for variety
+        currentLadderIndex = Math.floor(Math.random() * ladders.length);
+        activeLadder = ladders[currentLadderIndex];
+
+        // Create Keyboard once
+        const kb = document.getElementById('keyboard');
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(l => {
+            kb.innerHTML += `<button id="key-${l}" onclick="checkLetter('${l}')">${l}</button>`;
+        });
+        
         renderLadder();
-        renderKeyboard();
     }
 
     function renderLadder() {
         const area = document.getElementById('ladder');
         area.innerHTML = "";
-        chains.forEach((step, index) => {
-            let displayWord = step.word;
+        document.getElementById('nextBtn').classList.add('hidden');
+        document.getElementById('message').innerText = "";
+        
+        activeLadder.forEach((step, index) => {
+            let displayWord = "";
             let cssClass = "rung";
 
             if (index > currentStep) {
+                // Future rungs are locked
                 displayWord = "???";
                 cssClass += " locked";
             } else if (index === currentStep) {
-                // Show the previous word but with one blank where the change happens
-                const prev = chains[index-1].word;
-                displayWord = prev.split('').map((char, i) => char === step.word[i] ? char : "_").join("");
+                // The current target rung
+                if (index === 0) {
+                     displayWord = step.word; // Base word is always solved
+                } else {
+                    const prev = activeLadder[index-1].word;
+                    // Show the previous word with one blank where the change happens
+                    displayWord = prev.split('').map((char, i) => char === step.word[i] ? char : "_").join("");
+                }
                 cssClass += " current";
-                document.getElementById('hint').innerText = "HINT: " + step.hint;
+                document.getElementById('hint').innerText = "CLUE: " + step.hint;
+            } else {
+                // Solved Rungs
+                displayWord = step.word;
             }
 
             area.innerHTML += `<div class="${cssClass}">${displayWord}</div>`;
         });
-    }
 
-    function renderKeyboard() {
-        const kb = document.getElementById('keyboard');
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(l => {
-            kb.innerHTML += `<button onclick="checkLetter('${l}')">${l}</button>`;
-        });
+        // Ensure the keyboard is enabled only if the game is active
+        document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = (currentStep >= activeLadder.length - 1));
     }
 
     function checkLetter(l) {
-        const targetWord = chains[currentStep].word;
-        const prevWord = chains[currentStep - 1].word;
+        if (currentStep >= activeLadder.length - 1) return; 
+
+        const targetWord = activeLadder[currentStep + 1].word;
+        const prevWord = activeLadder[currentStep].word;
         
-        // Find which position changed
+        // Find the index of the changed letter
         let changeIndex = -1;
         for(let i=0; i<targetWord.length; i++) {
-            if(targetWord[i] !== prevWord[i]) changeIndex = i;
+            if(targetWord[i] !== prevWord[i]) {
+                changeIndex = i;
+                break;
+            }
         }
 
-        if (l === targetWord[changeIndex]) {
+        if (changeIndex !== -1 && l === targetWord[changeIndex]) {
             currentStep++;
-            if (currentStep < chains.length) {
-                renderLadder();
+            document.getElementById('message').style.color = var(--success);
+            document.getElementById('message').innerText = `✅ Success! New word: ${targetWord}`;
+
+            if (currentStep === activeLadder.length - 1) {
+                // Final Rung Reached
+                currentStep++; // Mark as complete
+                renderLadder(); // Final render with all words solved
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('hint').innerText = "LAB COMPLETE! Ready for the next experiment.";
             } else {
-                document.getElementById('ladder').innerHTML = "<h2 style='color:#22c55e'>TOP REACHED!</h2>";
-                document.getElementById('hint').innerText = "Experiment Successful!";
+                // Move to next step
+                renderLadder();
             }
         } else {
-            document.getElementById('hint').innerText = "Wrong chemical! Try again.";
+            document.getElementById('message').style.color = var(--error);
+            document.getElementById('message').innerText = "❌ Incorrect letter. Check your sounds!";
         }
+    }
+    
+    function loadNextLadder() {
+        // Find the next ladder, wrapping around to the start if necessary
+        currentLadderIndex = (currentLadderIndex + 1) % ladders.length;
+        activeLadder = ladders[currentLadderIndex];
+        currentStep = 0;
+        
+        // Reset the UI
+        renderLadder();
     }
 
     init();
