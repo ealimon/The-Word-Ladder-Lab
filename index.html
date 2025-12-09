@@ -30,7 +30,8 @@
             border-radius: 15px; 
             background: #1e293b; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-            min-height: 600px;
+            /* Increased height for 6 rungs */
+            min-height: 650px; 
         }
         
         /* Ladder Structure */
@@ -38,9 +39,10 @@
             position: relative; 
             margin: 40px auto; 
             width: 250px; 
+            /* Added space for 6 rungs */
             display: flex; 
             flex-direction: column-reverse; 
-            gap: 15px; 
+            gap: 12px; 
             border-left: 12px solid var(--ladder); 
             border-right: 12px solid var(--ladder); 
             padding: 10px 0; 
@@ -138,43 +140,47 @@
         return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     }
 
-    // --- DATABASE: 3 Word Ladder Sets (15 Words Total) ---
+    // --- DATABASE: 3 Word Ladder Sets (18 Words Total - 6 per ladder) ---
     const ladders = [
-        // Ladder 1: CAT -> DOT
+        // Ladder 1: CAT -> WET
         [
             { word: "CAT", hint: "Start: A common pet" },
             { word: "HAT", hint: "Climb 1: Something you wear on your head" },
             { word: "HOT", hint: "Climb 2: Opposite of cold" },
             { word: "POT", hint: "Climb 3: Used for cooking soup" },
-            { word: "DOT", hint: "Climb 4: A tiny circle" }
+            { word: "PET", hint: "Climb 4: A friend or creature" },
+            { word: "WET", hint: "Climb 5: Opposite of dry" }
         ],
-        // Ladder 2: FIN -> FAN
+        // Ladder 2: FIN -> BOX
         [
             { word: "FIN", hint: "Start: The part of a fish" },
             { word: "PIN", hint: "Climb 1: Used to hold paper together" },
             { word: "PAN", hint: "Climb 2: A flat dish for cooking" },
             { word: "MAN", hint: "Climb 3: An adult male person" },
-            { word: "FAN", hint: "Climb 4: Used to cool off" }
+            { word: "MAX", hint: "Climb 4: Short for the name 'Maximilian'" },
+            { word: "BOX", hint: "Climb 5: A container" }
         ],
-        // Ladder 3: MUG -> MAT
+        // Ladder 3: MUG -> RAT
         [
             { word: "MUG", hint: "Start: A large drinking cup" },
             { word: "MOP", hint: "Climb 1: Used to clean the floor" },
             { word: "MAP", hint: "Climb 2: Shows you where to go" },
-            { word: "MIP", hint: "Climb 3: *Nonsense word for phonics practice*" }, 
-            { word: "MAT", hint: "Climb 4: A piece of fabric placed on the floor" }
+            { word: "MAT", hint: "Climb 3: A piece of fabric placed on the floor" }, 
+            { word: "FAT", hint: "Climb 4: Opposite of thin" },
+            { word: "RAT", hint: "Climb 5: A large mouse" }
         ]
     ];
     // --- END DATABASE ---
 
     let currentLadderIndex = 0; 
-    let currentStep = 1; // Start on Step 1, so the first rung displayed is the challenge (_AT)
+    let currentStep = 1; 
     let activeLadder = [];
 
     function init() {
-        currentLadderIndex = 0;
+        // Start with a random ladder
+        currentLadderIndex = Math.floor(Math.random() * ladders.length);
         activeLadder = ladders[currentLadderIndex];
-        currentStep = 1; // Crucial: Start at the first challenge (index 1)
+        currentStep = 1; // Start at the first challenge (index 1)
 
         // Create Keyboard once
         const kb = document.getElementById('keyboard');
@@ -192,22 +198,24 @@
         document.getElementById('nextBtn').classList.add('hidden');
         document.getElementById('message').innerText = "";
         
-        // Loop through the entire ladder, from top (highest index) to bottom (index 0)
-        activeLadder.forEach((step, index) => {
+        const reversedLadder = [...activeLadder].reverse();
+        
+        reversedLadder.forEach((step, indexFromTop) => {
+            const index = activeLadder.length - 1 - indexFromTop; // Recalculate original index
+            
             let displayWord = "";
             let cssClass = "rung";
 
             if (index > currentStep) { 
-                // Rungs above the current target are locked
-                displayWord = "???";
+                // Rungs above the current target
+                displayWord = (index === activeLadder.length - 1) ? "???" : "???"; 
                 cssClass += " locked";
             } else if (index === currentStep) {
-                // This is the current target rung the student must solve
+                // This is the current target rung
                 
-                const prev = activeLadder[index - 1].word; // The word below it (CAT)
-                const target = activeLadder[index].word; // The solution word (HAT)
+                const prev = activeLadder[index - 1].word; 
+                const target = activeLadder[index].word; 
                 
-                // Find the one letter that changes
                 let changeIndex = -1;
                 for(let i=0; i<target.length; i++) {
                     if(target[i] !== prev[i]) {
@@ -215,7 +223,7 @@
                         break;
                     }
                 }
-                // Display the previous word, replacing the changed letter with a blank
+                
                 displayWord = prev.split('').map((char, i) => i === changeIndex ? "_" : char).join("");
                 
                 cssClass += " current";
@@ -223,7 +231,14 @@
             
             } else if (index < currentStep) {
                  // Solved Rungs (Base Word (index 0) and all solved steps below the target)
-                displayWord = step.word;
+                
+                // Display the solved word as a question mark only for the final rung
+                if (index === activeLadder.length - 1) {
+                    displayWord = activeLadder[activeLadder.length - 2].word.split('').map(char => '?').join('');
+                } else {
+                     displayWord = step.word;
+                }
+                 
             }
             
             area.innerHTML += `<div class="${cssClass}">${displayWord}</div>`;
@@ -232,23 +247,21 @@
         // Final Check for completion
         if (currentStep === activeLadder.length) {
              document.getElementById('nextBtn').classList.remove('hidden');
-             document.getElementById('hint').innerText = "LAB COMPLETE! Ready for the next experiment.";
+             // --- FINAL FIX HERE ---
+             document.getElementById('hint').innerText = "LAB COMPLETE! Ready for the next experiment?";
              document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = true);
         } else {
-             // Disable keyboard if all rungs are solved (safety check, though covered above)
             document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = false);
         }
     }
     // --- END RENDER FUNCTION ---
 
     function checkLetter(l) {
-        if (currentStep >= activeLadder.length) return; // All words solved
+        if (currentStep >= activeLadder.length) return; 
 
-        // The target word index is always currentStep
         const targetWord = activeLadder[currentStep].word;
         const prevWord = activeLadder[currentStep - 1].word;
         
-        // Find the index of the changed letter
         let changeIndex = -1;
         for(let i=0; i<targetWord.length; i++) {
             if(targetWord[i] !== prevWord[i]) {
@@ -258,28 +271,24 @@
         }
 
         if (changeIndex !== -1 && l === targetWord[changeIndex]) {
-            // Success! We solved the word at currentStep, so move to the next step
             document.getElementById('message').style.color = getCssVar('--color-success');
             document.getElementById('message').innerText = `✅ Success! New word: ${targetWord}`;
             currentStep++;
             renderLadder();
             
         } else {
-            // Incorrect attempt
             document.getElementById('message').style.color = getCssVar('--color-error');
             document.getElementById('message').innerText = "❌ Incorrect letter. Check your sounds!";
-            // Clear message after a short delay
             setTimeout(() => { if(currentStep < activeLadder.length) document.getElementById('message').innerText = ""; }, 1200);
         }
     }
     
     function loadNextLadder() {
-        // Sequentially move to the next ladder, wrapping around
+        // Move to the next ladder sequentially, wrapping around
         currentLadderIndex = (currentLadderIndex + 1) % ladders.length;
         activeLadder = ladders[currentLadderIndex];
-        currentStep = 1; // Start the new lab on its first challenge
+        currentStep = 1; 
         
-        // Reset the UI
         renderLadder();
     }
 
