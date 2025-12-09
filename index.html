@@ -135,7 +135,6 @@
 <script>
     // Helper function to correctly read CSS variables
     function getCssVar(name) {
-        // Read from the root element's computed style
         return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     }
 
@@ -227,6 +226,7 @@
         renderLadder();
     }
 
+    // --- CORRECTED RENDER FUNCTION ---
     function renderLadder() {
         const area = document.getElementById('ladder');
         area.innerHTML = "";
@@ -242,14 +242,26 @@
                 displayWord = "???";
                 cssClass += " locked";
             } else if (index === currentStep) {
-                // The current target rung
+                // The current target rung (Index 0 is the solved base word)
                 if (index === 0) {
-                     displayWord = step.word; // Base word is always solved
+                     displayWord = step.word;
                 } else {
-                    const prev = activeLadder[index-1].word;
-                    // Show the previous word with one blank where the change happens
-                    displayWord = prev.split('').map((char, i) => char === step.word[i] ? char : "_").join("");
+                    // Show the previous word with ONE blank space for the target change
+                    const prev = activeLadder[index - 1].word;
+                    const target = step.word;
+
+                    // Find the single changed letter index
+                    let changeIndex = -1;
+                    for(let i=0; i<target.length; i++) {
+                        if(target[i] !== prev[i]) {
+                            changeIndex = i;
+                            break;
+                        }
+                    }
+                    // Display the previous word, replacing the changed letter with a blank
+                    displayWord = prev.split('').map((char, i) => i === changeIndex ? "_" : char).join("");
                 }
+                
                 cssClass += " current";
                 document.getElementById('hint').innerText = `LAB ${currentLadderIndex + 1}/${ladders.length} | ${step.hint}`;
             } else {
@@ -263,6 +275,7 @@
         // Disable keyboard if all rungs are solved
         document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = (currentStep >= activeLadder.length));
     }
+    // --- END CORRECTED RENDER FUNCTION ---
 
     function checkLetter(l) {
         if (currentStep >= activeLadder.length - 1) return; 
@@ -281,7 +294,7 @@
 
         if (changeIndex !== -1 && l === targetWord[changeIndex]) {
             currentStep++;
-            // --- FIX APPLIED HERE (Using function to read CSS variable) ---
+            // --- FIXED STYLE CALL ---
             document.getElementById('message').style.color = getCssVar('--color-success');
             document.getElementById('message').innerText = `✅ Success! New word: ${targetWord}`;
 
@@ -296,7 +309,7 @@
                 renderLadder();
             }
         } else {
-            // --- FIX APPLIED HERE (Using function to read CSS variable) ---
+            // --- FIXED STYLE CALL ---
             document.getElementById('message').style.color = getCssVar('--color-error');
             document.getElementById('message').innerText = "❌ Incorrect letter. Check your sounds!";
             setTimeout(() => { if(currentStep < activeLadder.length - 1) document.getElementById('message').innerText = ""; }, 1200);
