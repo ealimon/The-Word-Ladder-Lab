@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Ladder Lab - Phoneme Substitution</title>
+    <title>Word Ladder Lab - CVC Phoneme Substitution</title>
     <style>
         :root { 
             --primary: #00d4ff; 
@@ -11,6 +11,9 @@
             --ladder: #64748b; 
             --success: #22c55e;
             --error: #ef4444; 
+            /* Define the colors here so JS can read them */
+            --color-success: #22c55e;
+            --color-error: #ef4444;
         }
         body { 
             font-family: 'Courier New', Courier, monospace; 
@@ -27,6 +30,7 @@
             border-radius: 15px; 
             background: #1e293b; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            min-height: 600px;
         }
         
         /* Ladder Structure */
@@ -35,7 +39,7 @@
             margin: 40px auto; 
             width: 250px; 
             display: flex; 
-            flex-direction: column-reverse; /* Builds ladder from bottom up */
+            flex-direction: column-reverse; 
             gap: 15px; 
             border-left: 12px solid var(--ladder); 
             border-right: 12px solid var(--ladder); 
@@ -83,6 +87,9 @@
         button:hover {
             background: #4de0ff;
         }
+        button:active {
+             transform: translateY(2px);
+        }
         button:disabled { 
             background: #334155; 
             cursor: not-allowed; 
@@ -105,6 +112,7 @@
             margin-top: 15px;
             background: var(--success);
             color: white;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -125,37 +133,68 @@
 </div>
 
 <script>
-    // --- DATABASE: Multi-Ladder Structure ---
+    // Helper function to correctly read CSS variables
+    function getCssVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    // --- DATABASE: 6 Word Ladder Sets (30 Words Total) ---
     const ladders = [
-        // Ladder Set 1: A-O-T Chain (Change Initial and Medial Vowel)
+        // Ladder 1: CAT -> DOT (Initial and Medial Vowel Change)
         [
-            { word: "CAT", hint: "Start word: A common pet" },
+            { word: "CAT", hint: "Start: A common pet" },
             { word: "HAT", hint: "Climb 1: Something you wear on your head" },
             { word: "HOT", hint: "Climb 2: Opposite of cold" },
             { word: "POT", hint: "Climb 3: Used for cooking soup" },
             { word: "DOT", hint: "Climb 4: A tiny circle" }
         ],
-        // Ladder Set 2: FIN -> FAN Chain (Change Initial and Medial Vowel)
+        // Ladder 2: FIN -> FAN (Initial and Medial Vowel Change)
         [
-            { word: "FIN", hint: "Start word: The part of a fish used for swimming" },
-            { word: "PIN", hint: "Climb 1: Used to hold paper or fabric together" },
-            { word: "PAN", hint: "Climb 2: A flat metal dish for cooking" },
+            { word: "FIN", hint: "Start: The part of a fish" },
+            { word: "PIN", hint: "Climb 1: Used to hold paper together" },
+            { word: "PAN", hint: "Climb 2: A flat dish for cooking" },
             { word: "MAN", hint: "Climb 3: An adult male person" },
             { word: "FAN", hint: "Climb 4: Used to cool off" }
         ],
-        // Ladder Set 3: MUG -> MAT Chain (Change Medial Vowel)
+        // Ladder 3: MUG -> MAT (Medial Vowel Change)
         [
-            { word: "MUG", hint: "Start word: A large drinking cup" },
+            { word: "MUG", hint: "Start: A large drinking cup" },
             { word: "MOP", hint: "Climb 1: Used to clean the floor" },
             { word: "MAP", hint: "Climb 2: Shows you where to go" },
-            { word: "MIP", hint: "Climb 3: *Nonsense Word for practice*" }, 
+            { word: "MIP", hint: "Climb 3: *Nonsense word for phonics practice*" }, 
             { word: "MAT", hint: "Climb 4: A piece of fabric placed on the floor" }
+        ],
+        // --- NEW LADDER SETS ADDED BELOW ---
+
+        // Ladder 4: SUN -> BUG (Initial and Final Change)
+        [
+            { word: "SUN", hint: "Start: The star that warms the earth" },
+            { word: "FUN", hint: "Climb 1: Joyful activity" },
+            { word: "FUR", hint: "Climb 2: Animal hair" },
+            { word: "FOG", hint: "Climb 3: A thick cloud close to the ground" },
+            { word: "BUG", hint: "Climb 4: A small insect" }
+        ],
+        // Ladder 5: LED -> LIP (Vowel and Initial Change)
+        [
+            { word: "LED", hint: "Start: Past tense of 'lead'" },
+            { word: "RED", hint: "Climb 1: The color of a stop sign" },
+            { word: "RID", hint: "Climb 2: To make free of something" },
+            { word: "RUN", hint: "Climb 3: To move fast" },
+            { word: "LIP", hint: "Climb 4: The edge of your mouth" }
+        ],
+        // Ladder 6: BOX -> TOP (Final and Initial Change)
+        [
+            { word: "BOX", hint: "Start: A container for things" },
+            { word: "FOX", hint: "Climb 1: A bushy-tailed wild dog" },
+            { word: "FIX", hint: "Climb 2: To repair something" },
+            { word: "TIX", hint: "Climb 3: *Nonsense word*" },
+            { word: "TOP", hint: "Climb 4: The highest point" }
         ]
     ];
     // --- END DATABASE ---
 
     let currentLadderIndex = 0;
-    let currentStep = 0; // Tracks the rung the student is trying to solve (starts at 1)
+    let currentStep = 0; 
     let activeLadder = [];
 
     function init() {
@@ -172,6 +211,7 @@
         renderLadder();
     }
 
+    // --- RENDER FUNCTION (Corrected) ---
     function renderLadder() {
         const area = document.getElementById('ladder');
         area.innerHTML = "";
@@ -191,12 +231,24 @@
                 if (index === 0) {
                      displayWord = step.word; // Base word is always solved
                 } else {
-                    const prev = activeLadder[index-1].word;
-                    // Show the previous word with one blank where the change happens
-                    displayWord = prev.split('').map((char, i) => char === step.word[i] ? char : "_").join("");
+                    // Show the previous word with ONE blank space for the target change
+                    const prev = activeLadder[index - 1].word;
+                    const target = step.word;
+
+                    // Find the single changed letter index
+                    let changeIndex = -1;
+                    for(let i=0; i<target.length; i++) {
+                        if(target[i] !== prev[i]) {
+                            changeIndex = i;
+                            break;
+                        }
+                    }
+                    // Display the previous word, replacing the changed letter with a blank
+                    displayWord = prev.split('').map((char, i) => i === changeIndex ? "_" : char).join("");
                 }
+                
                 cssClass += " current";
-                document.getElementById('hint').innerText = "CLUE: " + step.hint;
+                document.getElementById('hint').innerText = `LAB ${currentLadderIndex + 1}/${ladders.length} | ${step.hint}`;
             } else {
                 // Solved Rungs
                 displayWord = step.word;
@@ -205,9 +257,10 @@
             area.innerHTML += `<div class="${cssClass}">${displayWord}</div>`;
         });
 
-        // Ensure the keyboard is enabled only if the game is active
-        document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = (currentStep >= activeLadder.length - 1));
+        // Disable keyboard if all rungs are solved
+        document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = (currentStep >= activeLadder.length));
     }
+    // --- END RENDER FUNCTION (Corrected) ---
 
     function checkLetter(l) {
         if (currentStep >= activeLadder.length - 1) return; 
@@ -226,7 +279,8 @@
 
         if (changeIndex !== -1 && l === targetWord[changeIndex]) {
             currentStep++;
-            document.getElementById('message').style.color = var(--success);
+            // --- STYLE FIX APPLIED HERE ---
+            document.getElementById('message').style.color = getCssVar('--color-success');
             document.getElementById('message').innerText = `✅ Success! New word: ${targetWord}`;
 
             if (currentStep === activeLadder.length - 1) {
@@ -240,13 +294,15 @@
                 renderLadder();
             }
         } else {
-            document.getElementById('message').style.color = var(--error);
+            // --- STYLE FIX APPLIED HERE ---
+            document.getElementById('message').style.color = getCssVar('--color-error');
             document.getElementById('message').innerText = "❌ Incorrect letter. Check your sounds!";
+            setTimeout(() => { if(currentStep < activeLadder.length - 1) document.getElementById('message').innerText = ""; }, 1200);
         }
     }
     
     function loadNextLadder() {
-        // Find the next ladder, wrapping around to the start if necessary
+        // Move to the next ladder, wrapping around to the start if necessary
         currentLadderIndex = (currentLadderIndex + 1) % ladders.length;
         activeLadder = ladders[currentLadderIndex];
         currentStep = 0;
