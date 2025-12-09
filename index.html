@@ -140,7 +140,7 @@
 
     // --- DATABASE: 3 Word Ladder Sets (15 Words Total) ---
     const ladders = [
-        // Ladder 1: CAT -> DOT (Initial and Medial Vowel Change)
+        // Ladder 1: CAT -> DOT
         [
             { word: "CAT", hint: "Start: A common pet" },
             { word: "HAT", hint: "Climb 1: Something you wear on your head" },
@@ -148,7 +148,7 @@
             { word: "POT", hint: "Climb 3: Used for cooking soup" },
             { word: "DOT", hint: "Climb 4: A tiny circle" }
         ],
-        // Ladder 2: FIN -> FAN (Initial and Medial Vowel Change)
+        // Ladder 2: FIN -> FAN
         [
             { word: "FIN", hint: "Start: The part of a fish" },
             { word: "PIN", hint: "Climb 1: Used to hold paper together" },
@@ -156,7 +156,7 @@
             { word: "MAN", hint: "Climb 3: An adult male person" },
             { word: "FAN", hint: "Climb 4: Used to cool off" }
         ],
-        // Ladder 3: MUG -> MAT (Medial Vowel Change)
+        // Ladder 3: MUG -> MAT
         [
             { word: "MUG", hint: "Start: A large drinking cup" },
             { word: "MOP", hint: "Climb 1: Used to clean the floor" },
@@ -168,13 +168,13 @@
     // --- END DATABASE ---
 
     let currentLadderIndex = 0; 
-    let currentStep = 0; // currentStep = 0 is the base word (CAT). The student solves for currentStep + 1.
+    let currentStep = 1; // Start on Step 1, so the first rung displayed is the challenge (_AT)
     let activeLadder = [];
 
     function init() {
-        // Set the active ladder to the first one in the sequence
         currentLadderIndex = 0;
         activeLadder = ladders[currentLadderIndex];
+        currentStep = 1; // Crucial: Start at the first challenge (index 1)
 
         // Create Keyboard once
         const kb = document.getElementById('keyboard');
@@ -185,7 +185,7 @@
         renderLadder();
     }
 
-    // --- RENDER FUNCTION (Corrected Logic for Blank Spaces) ---
+    // --- RENDER FUNCTION ---
     function renderLadder() {
         const area = document.getElementById('ladder');
         area.innerHTML = "";
@@ -197,10 +197,11 @@
             let displayWord = "";
             let cssClass = "rung";
 
-            if (index > currentStep + 1) { // Rungs above the *next* target are locked
+            if (index > currentStep) { 
+                // Rungs above the current target are locked
                 displayWord = "???";
                 cssClass += " locked";
-            } else if (index === currentStep + 1) {
+            } else if (index === currentStep) {
                 // This is the current target rung the student must solve
                 
                 const prev = activeLadder[index - 1].word; // The word below it (CAT)
@@ -220,43 +221,32 @@
                 cssClass += " current";
                 document.getElementById('hint').innerText = `LAB ${currentLadderIndex + 1}/${ladders.length} | ${step.hint}`;
             
-            } else if (index <= currentStep) {
-                 // Solved Rungs (Base Word (index 0) and all solved steps)
+            } else if (index < currentStep) {
+                 // Solved Rungs (Base Word (index 0) and all solved steps below the target)
                 displayWord = step.word;
-
-                 if (index === currentStep) {
-                    // Display the hint for the next target if it exists, otherwise show solved message
-                    if (currentStep < activeLadder.length - 1) {
-                         document.getElementById('hint').innerText = `LAB ${currentLadderIndex + 1}/${ladders.length} | ${activeLadder[currentStep + 1].hint}`;
-                    }
-                 }
-
-            } else {
-                // Future rungs are locked
-                displayWord = "???";
-                cssClass += " locked";
             }
             
             area.innerHTML += `<div class="${cssClass}">${displayWord}</div>`;
         });
-
-        // Show the Next Lab button if the final step has been completed
-        if (currentStep === activeLadder.length - 1) {
+        
+        // Final Check for completion
+        if (currentStep === activeLadder.length) {
              document.getElementById('nextBtn').classList.remove('hidden');
              document.getElementById('hint').innerText = "LAB COMPLETE! Ready for the next experiment.";
+             document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = true);
+        } else {
+             // Disable keyboard if all rungs are solved (safety check, though covered above)
+            document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = false);
         }
-
-        // Disable keyboard if all rungs are solved
-        document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = (currentStep === activeLadder.length - 1));
     }
     // --- END RENDER FUNCTION ---
 
     function checkLetter(l) {
-        if (currentStep >= activeLadder.length - 1) return; 
+        if (currentStep >= activeLadder.length) return; // All words solved
 
-        // The target word is always currentStep + 1
-        const targetWord = activeLadder[currentStep + 1].word;
-        const prevWord = activeLadder[currentStep].word;
+        // The target word index is always currentStep
+        const targetWord = activeLadder[currentStep].word;
+        const prevWord = activeLadder[currentStep - 1].word;
         
         // Find the index of the changed letter
         let changeIndex = -1;
@@ -268,28 +258,26 @@
         }
 
         if (changeIndex !== -1 && l === targetWord[changeIndex]) {
-            currentStep++;
-            // Use helper function to fetch colors (prevents crash)
+            // Success! We solved the word at currentStep, so move to the next step
             document.getElementById('message').style.color = getCssVar('--color-success');
             document.getElementById('message').innerText = `✅ Success! New word: ${targetWord}`;
-
-            // We increment currentStep *before* rendering, so renderLadder handles the solved state
+            currentStep++;
             renderLadder();
             
         } else {
-            // Use helper function to fetch colors (prevents crash)
+            // Incorrect attempt
             document.getElementById('message').style.color = getCssVar('--color-error');
             document.getElementById('message').innerText = "❌ Incorrect letter. Check your sounds!";
             // Clear message after a short delay
-            setTimeout(() => { if(currentStep < activeLadder.length - 1) document.getElementById('message').innerText = ""; }, 1200);
+            setTimeout(() => { if(currentStep < activeLadder.length) document.getElementById('message').innerText = ""; }, 1200);
         }
     }
     
     function loadNextLadder() {
-        // Sequentially move to the next ladder
+        // Sequentially move to the next ladder, wrapping around
         currentLadderIndex = (currentLadderIndex + 1) % ladders.length;
         activeLadder = ladders[currentLadderIndex];
-        currentStep = 0;
+        currentStep = 1; // Start the new lab on its first challenge
         
         // Reset the UI
         renderLadder();
