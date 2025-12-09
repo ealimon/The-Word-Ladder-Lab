@@ -11,6 +11,9 @@
             --ladder: #64748b; 
             --success: #22c55e;
             --error: #ef4444; 
+            /* Define the colors here so JS can read them */
+            --color-success: #22c55e;
+            --color-error: #ef4444;
         }
         body { 
             font-family: 'Courier New', Courier, monospace; 
@@ -130,6 +133,12 @@
 </div>
 
 <script>
+    // Helper function to correctly read CSS variables
+    function getCssVar(name) {
+        // Read from the root element's computed style
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
     // --- DATABASE: All 8 Word Ladder Sets ---
     const ladders = [
         // Ladder 1: CAT -> DOT (A-O-T Chain)
@@ -202,10 +211,10 @@
     let currentLadderIndex = 0;
     let currentStep = 0; 
     let activeLadder = [];
-    
+
     // Function to run on page load
     function init() {
-        // Start with a random ladder (or change to 0 to always start with the first one)
+        // Start with a random ladder
         currentLadderIndex = Math.floor(Math.random() * ladders.length);
         activeLadder = ladders[currentLadderIndex];
 
@@ -272,7 +281,8 @@
 
         if (changeIndex !== -1 && l === targetWord[changeIndex]) {
             currentStep++;
-            document.getElementById('message').style.color = var(--success);
+            // --- FIX APPLIED HERE (Using function to read CSS variable) ---
+            document.getElementById('message').style.color = getCssVar('--color-success');
             document.getElementById('message').innerText = `✅ Success! New word: ${targetWord}`;
 
             if (currentStep === activeLadder.length - 1) {
@@ -286,7 +296,8 @@
                 renderLadder();
             }
         } else {
-            document.getElementById('message').style.color = var(--error);
+            // --- FIX APPLIED HERE (Using function to read CSS variable) ---
+            document.getElementById('message').style.color = getCssVar('--color-error');
             document.getElementById('message').innerText = "❌ Incorrect letter. Check your sounds!";
             setTimeout(() => { if(currentStep < activeLadder.length - 1) document.getElementById('message').innerText = ""; }, 1200);
         }
