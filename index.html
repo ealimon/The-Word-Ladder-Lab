@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Ladder Lab - Phoneme Substitution</title>
+    <title>Word Ladder Lab - CVC Phoneme Substitution</title>
     <style>
         :root { 
             --primary: #00d4ff; 
@@ -27,6 +27,7 @@
             border-radius: 15px; 
             background: #1e293b; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            min-height: 600px;
         }
         
         /* Ladder Structure */
@@ -35,7 +36,7 @@
             margin: 40px auto; 
             width: 250px; 
             display: flex; 
-            flex-direction: column-reverse; /* Builds ladder from bottom up */
+            flex-direction: column-reverse; 
             gap: 15px; 
             border-left: 12px solid var(--ladder); 
             border-right: 12px solid var(--ladder); 
@@ -83,6 +84,9 @@
         button:hover {
             background: #4de0ff;
         }
+        button:active {
+             transform: translateY(2px);
+        }
         button:disabled { 
             background: #334155; 
             cursor: not-allowed; 
@@ -105,6 +109,7 @@
             margin-top: 15px;
             background: var(--success);
             color: white;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -125,45 +130,86 @@
 </div>
 
 <script>
-    // --- DATABASE: Multi-Ladder Structure ---
+    // --- DATABASE: All 8 Word Ladder Sets ---
     const ladders = [
-        // Ladder Set 1: A-O-T Chain (Change Initial and Medial Vowel)
+        // Ladder 1: CAT -> DOT (A-O-T Chain)
         [
-            { word: "CAT", hint: "Start word: A common pet" },
+            { word: "CAT", hint: "Start: A common pet" },
             { word: "HAT", hint: "Climb 1: Something you wear on your head" },
             { word: "HOT", hint: "Climb 2: Opposite of cold" },
             { word: "POT", hint: "Climb 3: Used for cooking soup" },
             { word: "DOT", hint: "Climb 4: A tiny circle" }
         ],
-        // Ladder Set 2: FIN -> FAN Chain (Change Initial and Medial Vowel)
+        // Ladder 2: FIN -> FAN (Initial Sound focus)
         [
-            { word: "FIN", hint: "Start word: The part of a fish used for swimming" },
-            { word: "PIN", hint: "Climb 1: Used to hold paper or fabric together" },
-            { word: "PAN", hint: "Climb 2: A flat metal dish for cooking" },
+            { word: "FIN", hint: "Start: A part of a fish" },
+            { word: "PIN", hint: "Climb 1: Used to hold paper together" },
+            { word: "PAN", hint: "Climb 2: A flat dish for cooking" },
             { word: "MAN", hint: "Climb 3: An adult male person" },
             { word: "FAN", hint: "Climb 4: Used to cool off" }
         ],
-        // Ladder Set 3: MUG -> MAT Chain (Change Medial Vowel)
+        // Ladder 3: MUG -> MAT (Medial Vowel focus)
         [
-            { word: "MUG", hint: "Start word: A large drinking cup" },
+            { word: "MUG", hint: "Start: A large drinking cup" },
             { word: "MOP", hint: "Climb 1: Used to clean the floor" },
             { word: "MAP", hint: "Climb 2: Shows you where to go" },
-            { word: "MIP", hint: "Climb 3: *Nonsense Word for practice*" }, 
+            { word: "MIP", hint: "Climb 3: *Nonsense word*" }, 
             { word: "MAT", hint: "Climb 4: A piece of fabric placed on the floor" }
+        ],
+        // Ladder 4: RUN -> BAT (Final Sound Change)
+        [
+            { word: "RUN", hint: "Start: To move fast with your legs" },
+            { word: "RUT", hint: "Climb 1: A deep track worn in the ground" },
+            { word: "BUS", hint: "Climb 2: A large passenger vehicle" },
+            { word: "BUT", hint: "Climb 3: *A common conjunction*" },
+            { word: "BAT", hint: "Climb 4: Used to hit a baseball" }
+        ],
+        // Ladder 5: LIP -> BUN (Initial Sound Change)
+        [
+            { word: "LIP", hint: "Start: The edge of your mouth" },
+            { word: "HIP", hint: "Climb 1: Part of your body below the waist" },
+            { word: "HUT", hint: "Climb 2: A small, simple shelter" },
+            { word: "BUG", hint: "Climb 3: A small insect" },
+            { word: "BUN", hint: "Climb 4: A small bread roll" }
+        ],
+        // Ladder 6: MUD -> LED (Medial Vowel Swap)
+        [
+            { word: "MUD", hint: "Start: Wet, soft earth" },
+            { word: "MAD", hint: "Climb 1: Angry or upset" },
+            { word: "DAD", hint: "Climb 2: Your father" },
+            { word: "DID", hint: "Climb 3: Past tense of 'do'" },
+            { word: "LED", hint: "Climb 4: Past tense of 'lead'" }
+        ],
+        // Ladder 7: COT -> FOG (Mix of Initial/Medial)
+        [
+            { word: "COT", hint: "Start: A light, folding bed" },
+            { word: "DOT", hint: "Climb 1: A small circle" },
+            { word: "DIP", hint: "Climb 2: To put something briefly into a liquid" },
+            { word: "FIG", hint: "Climb 3: A sweet fruit" },
+            { word: "FOG", hint: "Climb 4: A thick cloud close to the ground" }
+        ],
+        // Ladder 8: CRY -> PLY (Introducing Y as Vowel/Mix)
+        [
+            { word: "CRY", hint: "Start: To shed tears" },
+            { word: "DRY", hint: "Climb 1: Not wet" },
+            { word: "FRY", hint: "Climb 2: To cook in hot oil" },
+            { word: "FLY", hint: "Climb 3: To move through the air" },
+            { word: "PLY", hint: "Climb 4: A thickness or layer of something" }
         ]
     ];
     // --- END DATABASE ---
 
     let currentLadderIndex = 0;
-    let currentStep = 0; // Tracks the rung the student is trying to solve (starts at 1)
+    let currentStep = 0; 
     let activeLadder = [];
-
+    
+    // Function to run on page load
     function init() {
-        // Randomly select a starting ladder for variety
+        // Start with a random ladder (or change to 0 to always start with the first one)
         currentLadderIndex = Math.floor(Math.random() * ladders.length);
         activeLadder = ladders[currentLadderIndex];
 
-        // Create Keyboard once
+        // Create Keyboard
         const kb = document.getElementById('keyboard');
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(l => {
             kb.innerHTML += `<button id="key-${l}" onclick="checkLetter('${l}')">${l}</button>`;
@@ -196,7 +242,7 @@
                     displayWord = prev.split('').map((char, i) => char === step.word[i] ? char : "_").join("");
                 }
                 cssClass += " current";
-                document.getElementById('hint').innerText = "CLUE: " + step.hint;
+                document.getElementById('hint').innerText = `LAB ${currentLadderIndex + 1}/${ladders.length} | ${step.hint}`;
             } else {
                 // Solved Rungs
                 displayWord = step.word;
@@ -205,8 +251,8 @@
             area.innerHTML += `<div class="${cssClass}">${displayWord}</div>`;
         });
 
-        // Ensure the keyboard is enabled only if the game is active
-        document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = (currentStep >= activeLadder.length - 1));
+        // Disable keyboard if all rungs are solved
+        document.querySelectorAll('#keyboard button').forEach(btn => btn.disabled = (currentStep >= activeLadder.length));
     }
 
     function checkLetter(l) {
@@ -242,11 +288,12 @@
         } else {
             document.getElementById('message').style.color = var(--error);
             document.getElementById('message').innerText = "❌ Incorrect letter. Check your sounds!";
+            setTimeout(() => { if(currentStep < activeLadder.length - 1) document.getElementById('message').innerText = ""; }, 1200);
         }
     }
     
     function loadNextLadder() {
-        // Find the next ladder, wrapping around to the start if necessary
+        // Move to the next ladder, wrapping around to the start if necessary
         currentLadderIndex = (currentLadderIndex + 1) % ladders.length;
         activeLadder = ladders[currentLadderIndex];
         currentStep = 0;
