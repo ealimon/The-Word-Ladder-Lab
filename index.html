@@ -3,16 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Ladder Lab - Level 2</title>
+    <title>Word Ladder Lab: The Full Journey</title>
     <style>
         :root {
-            --primary: #a855f7; /* Purple for Level 2 */
+            /* Level 1 Colors (Blue) */
+            --lvl1: #00d4ff;
+            /* Level 2 Colors (Purple) */
+            --lvl2: #a855f7;
+            /* Level 3 Colors (Orange) */
+            --lvl3: #f59e0b;
+            
             --bg: #0f172a;
             --rung-bg: #1e293b;
             --text: #ffffff;
             --success: #22c55e;
             --error: #ef4444;
-            --accent: #fbbf24;
+            --current-accent: var(--lvl1);
         }
         body {
             font-family: 'Courier New', monospace;
@@ -23,19 +29,21 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            transition: background 0.5s ease;
         }
         .lab-container {
             width: 90%;
-            max-width: 500px;
+            max-width: 550px;
             background: #1e293b;
             padding: 2rem;
-            border: 4px solid var(--primary);
+            border: 4px solid var(--current-accent);
             border-radius: 20px;
             text-align: center;
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
+            transition: border-color 0.5s ease;
         }
-        h1 { margin-top: 0; color: var(--primary); }
-        h3 { color: var(--accent); margin-bottom: 5px; }
+        .lvl-tag { font-weight: bold; color: var(--current-accent); letter-spacing: 2px; }
+        h1 { margin: 10px 0; color: var(--text); }
         
         #ladder {
             display: flex;
@@ -50,40 +58,41 @@
         }
         .rung {
             background: var(--rung-bg);
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: bold;
             letter-spacing: 8px;
             border: 2px solid transparent;
         }
         .rung.solved { color: var(--text); opacity: 0.8; }
         .rung.target { 
-            border-color: var(--primary); 
-            color: var(--primary); 
+            border-color: var(--current-accent); 
+            color: var(--current-accent); 
             background: #0f172a;
-            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
         }
         .rung.locked { color: #475569; }
 
-        .hint-text { color: var(--accent); font-weight: bold; margin: 15px 0; min-height: 2.5em; line-height: 1.2; }
-        .msg-text { height: 25px; margin-bottom: 10px; font-weight: bold; }
+        .hint-text { color: #fbbf24; font-weight: bold; margin: 15px 0; min-height: 3em; }
+        .msg-text { height: 25px; margin-bottom: 10px; font-weight: bold; font-size: 1.2rem; }
 
         .keyboard {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
             gap: 5px;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         .key {
-            padding: 10px 5px;
-            background: var(--primary);
+            padding: 12px 5px;
+            background: var(--current-accent);
             border: none;
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
-            color: white;
+            color: #0f172a;
+            transition: transform 0.1s;
         }
+        .key:active { transform: scale(0.9); }
         .key:disabled { background: #334155; cursor: not-allowed; opacity: 0.5; }
         
         .btn-action {
@@ -100,14 +109,14 @@
         }
 
         #final-screen { display: none; }
-        .badge { font-size: 5rem; margin: 20px 0; }
+        .badge { font-size: 6rem; margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <div class="lab-container" id="game-screen">
-    <h3>LEVEL 2</h3>
-    <h1>🧪 Senior Researcher Lab</h1>
+    <div id="level-display" class="lvl-tag">LEVEL 1: JUNIOR ASSISTANT</div>
+    <h1 id="lab-title">🧪 Experiment 1/3</h1>
     <div id="ladder"></div>
     <div id="message" class="msg-text"></div>
     <div id="hint" class="hint-text"></div>
@@ -116,45 +125,109 @@
 </div>
 
 <div class="lab-container" id="final-screen">
-    <h1>🏆 PROMOTED!</h1>
-    <div class="badge">🔬</div>
-    <h2>Lead Scientist Status Achieved!</h2>
-    <p>You have mastered 4-letter blends and digraphs.</p>
-    <button class="btn-action" style="display:inline-block; background: var(--primary);" onclick="location.reload()">RESTART LEVEL 2</button>
+    <div class="lvl-tag">RANK: MASTER SCIENTIST</div>
+    <h1>🏆 ALL LABS COMPLETE!</h1>
+    <div class="badge">👨‍🔬</div>
+    <h2>Unbelievable Results!</h2>
+    <p>You have mastered CVC words, Blends, and 5-Letter structures.</p>
+    <button class="btn-action" style="display:inline-block; background: var(--lvl1);" onclick="location.reload()">RESTART ALL LEVELS</button>
 </div>
 
 <script>
-    const allLadders = [
-        // Ladder 1: Digraphs (sh, ch)
-        [
-            { w: "SHIP", h: "Start: A large boat" },
-            { w: "SHOP", h: "Climb 1: A place where you buy things" },
-            { w: "CHOP", h: "Climb 2: To cut with an axe" },
-            { w: "CHIP", h: "Climb 3: A small piece of a potato" },
-            { w: "CLIP", h: "Climb 4: Used to hold papers together" }
-        ],
-        // Ladder 2: Ending Blends (st, nd)
-        [
-            { w: "FAST", h: "Start: To move very quickly" },
-            { w: "LAST", h: "Climb 1: The opposite of first" },
-            { w: "LIST", h: "Climb 2: Things written down to remember" },
-            { w: "FIST", h: "Climb 3: A closed hand" },
-            { w: "FISH", h: "Climb 4: An animal that swims" }
-        ],
-        // Ladder 3: Starting Blends (fr, dr, br)
-        [
-            { w: "FROG", h: "Start: A green jumping animal" },
-            { w: "FROM", h: "Climb 1: 'Where are you ____?'" },
-            { w: "DRUM", h: "Climb 2: A musical instrument you hit" },
-            { w: "DRAG", h: "Climb 3: To pull something heavy" },
-            { w: "BRAG", h: "Climb 4: To talk proudly about yourself" }
-        ]
+    const levels = [
+        {
+            name: "LEVEL 1: JUNIOR ASSISTANT",
+            color: "#00d4ff",
+            ladders: [
+                [
+                    { w: "CAT", h: "Start: A common pet" },
+                    { w: "HAT", h: "Something you wear on your head" },
+                    { w: "HOT", h: "Opposite of cold" },
+                    { w: "POT", h: "Used for cooking soup" },
+                    { w: "DOT", h: "A tiny circle" }
+                ],
+                [
+                    { w: "FIN", h: "Start: The part of a fish" },
+                    { w: "PIN", h: "Used to hold paper together" },
+                    { w: "PAN", h: "A flat dish for cooking" },
+                    { w: "MAN", h: "An adult male person" },
+                    { w: "FAN", h: "Used to cool off" }
+                ],
+                [
+                    { w: "MUG", h: "Start: A large drinking cup" },
+                    { w: "BUG", h: "A small insect" },
+                    { w: "BAG", h: "Something to carry groceries in" },
+                    { w: "RAG", h: "A cloth used for cleaning" },
+                    { w: "RAT", h: "A large mouse" }
+                ]
+            ]
+        },
+        {
+            name: "LEVEL 2: SENIOR RESEARCHER",
+            color: "#a855f7",
+            ladders: [
+                [
+                    { w: "SHIP", h: "Start: A large boat" },
+                    { w: "SHOP", h: "A place where you buy things" },
+                    { w: "CHOP", h: "To cut with an axe" },
+                    { w: "CHIP", h: "A small piece of a potato" },
+                    { w: "CLIP", h: "Used to hold papers together" }
+                ],
+                [
+                    { w: "FAST", h: "Start: To move very quickly" },
+                    { w: "LAST", h: "The opposite of first" },
+                    { w: "LIST", h: "Things written down to remember" },
+                    { w: "FIST", h: "A closed hand" },
+                    { w: "FISH", h: "An animal that swims" }
+                ],
+                [
+                    { w: "FROG", h: "Start: A green jumping animal" },
+                    { w: "FROM", h: "Where did you come ____?" },
+                    { w: "DRUM", h: "A musical instrument you hit" },
+                    { w: "DRAG", h: "To pull something heavy" },
+                    { w: "BRAG", h: "To talk proudly about yourself" }
+                ]
+            ]
+        },
+        {
+            name: "LEVEL 3: MASTER SCIENTIST",
+            color: "#f59e0b",
+            ladders: [
+                [
+                    { w: "CLOCK", h: "Start: It tells you the time" },
+                    { w: "BLOCK", h: "A toy cube or a city square" },
+                    { w: "BLACK", h: "The darkest color" },
+                    { w: "TRACK", h: "A path for a train or runner" },
+                    { w: "TRICK", h: "A magic stunt or a joke" }
+                ],
+                [
+                    { w: "STAMP", h: "Start: Put this on an envelope" },
+                    { w: "STUMP", h: "The bottom part of a cut tree" },
+                    { w: "SLUMP", h: "To sit or stand lazily" },
+                    { w: "CLUMP", h: "A small group of trees or dirt" },
+                    { w: "CLAMP", h: "A tool used to hold things tight" }
+                ],
+                [
+                    { w: "SHIRT", h: "Start: Clothing for your top half" },
+                    { w: "SHORT", h: "Opposite of tall" },
+                    { w: "SHOUT", h: "To yell loudly" },
+                    { w: "SHOOT", h: "To kick a ball at a goal" },
+                    { w: "SHEET", h: "A thin piece of paper or fabric" }
+                ]
+            ]
+        }
     ];
 
-    let labIdx = 0;
+    let currentLvlIdx = 0;
+    let currentLabIdx = 0;
     let stepIdx = 1;
 
     function initGame() {
+        const lvl = levels[currentLvlIdx];
+        document.documentElement.style.setProperty('--current-accent', lvl.color);
+        document.getElementById('level-display').innerText = lvl.name;
+        document.getElementById('lab-title').innerText = `🧪 Experiment ${currentLabIdx + 1}/3`;
+        
         const kb = document.getElementById('keyboard');
         kb.innerHTML = '';
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(char => {
@@ -169,7 +242,7 @@
 
     function render() {
         const ladderDiv = document.getElementById('ladder');
-        const currentLab = allLadders[labIdx];
+        const currentLab = levels[currentLvlIdx].ladders[currentLabIdx];
         ladderDiv.innerHTML = '';
 
         currentLab.forEach((item, i) => {
@@ -182,26 +255,36 @@
                 const prevWord = currentLab[i-1].w;
                 const targetWord = item.w;
                 let display = "";
-                // Handle 4-letter comparison
                 for(let j=0; j<targetWord.length; j++) {
                     display += (prevWord[j] !== targetWord[j]) ? "_" : prevWord[j];
                 }
                 rung.innerText = display;
                 rung.classList.add('target');
-                document.getElementById('hint').innerText = `LAB ${labIdx + 1}/3 | ${item.h}`;
+                document.getElementById('hint').innerText = item.h;
             } else {
-                rung.innerText = "????";
+                let mask = "";
+                for(let j=0; j<item.w.length; j++) mask += "?";
+                rung.innerText = mask;
                 rung.classList.add('locked');
             }
             ladderDiv.appendChild(rung);
         });
 
         if (stepIdx >= currentLab.length) {
-            const isFinal = labIdx === allLadders.length - 1;
-            document.getElementById('hint').innerText = isFinal ? "RESEARCH DATA COMPLETE!" : "LAB COMPLETE! Proceed to next station?";
-            document.getElementById('nextBtn').innerText = isFinal ? "GET PROMOTED ➔" : "NEXT EXPERIMENT ➔";
+            const isLastLab = currentLabIdx === 2;
+            const isLastLvl = currentLvlIdx === 2;
+            
+            if (isLastLab && isLastLvl) {
+                document.getElementById('nextBtn').innerText = "FINISH FINAL REPORT ➔";
+            } else if (isLastLab) {
+                document.getElementById('nextBtn').innerText = "LEVEL UP ➔";
+            } else {
+                document.getElementById('nextBtn').innerText = "NEXT EXPERIMENT ➔";
+            }
+            
             document.getElementById('nextBtn').style.display = 'inline-block';
             document.querySelectorAll('.key').forEach(b => b.disabled = true);
+            document.getElementById('hint').innerText = "DATA VERIFIED! Ready to proceed?";
         } else {
             document.getElementById('nextBtn').style.display = 'none';
             document.querySelectorAll('.key').forEach(b => b.disabled = false);
@@ -209,12 +292,11 @@
     }
 
     function guess(char) {
-        const currentLab = allLadders[labIdx];
+        const currentLab = levels[currentLvlIdx].ladders[currentLabIdx];
         if (stepIdx >= currentLab.length) return;
 
         const targetWord = currentLab[stepIdx].w;
         const prevWord = currentLab[stepIdx-1].w;
-        
         let correctChar = "";
         for(let j=0; j<targetWord.length; j++) {
             if (targetWord[j] !== prevWord[j]) correctChar = targetWord[j];
@@ -223,22 +305,30 @@
         const msg = document.getElementById('message');
         if (char === correctChar) {
             msg.style.color = "var(--success)";
-            msg.innerText = "✅ DATA RECORDED!";
+            msg.innerText = "✅ DATA SECURED";
             stepIdx++;
             render();
         } else {
             msg.style.color = "var(--error)";
-            msg.innerText = "❌ RE-EVALUATE";
+            msg.innerText = "❌ ANOMALY DETECTED";
         }
         setTimeout(() => msg.innerText = "", 1000);
     }
 
     function handleNext() {
-        if (labIdx < allLadders.length - 1) {
-            labIdx++;
+        if (currentLabIdx < 2) {
+            // Move to next lab in current level
+            currentLabIdx++;
+            stepIdx = 1;
+            initGame();
+        } else if (currentLvlIdx < 2) {
+            // Move to next level
+            currentLvlIdx++;
+            currentLabIdx = 0;
             stepIdx = 1;
             initGame();
         } else {
+            // Show Final Screen
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('final-screen').style.display = 'block';
         }
