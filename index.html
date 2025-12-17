@@ -328,4 +328,131 @@
         // Build Keyboard
         const kb = document.getElementById('keyboard');
         kb.innerHTML = '';
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = 'key';
+            btn.innerText = char;
+            btn.onclick = () => guess(char);
+            kb.appendChild(btn);
+        });
+        
+        render();
+    }
+
+    function render() {
+        const ladderDiv = document.getElementById('ladder');
+        const currentLab = levels[currentLvlIdx].ladders[currentLabIdx];
+        ladderDiv.innerHTML = '';
+
+        currentLab.forEach((item, i) => {
+            const rung = document.createElement('div');
+            rung.classList.add('rung');
+            
+            if (i < stepIdx) {
+                // Solved rungs
+                rung.innerText = item.w;
+                rung.classList.add('solved');
+            } 
+            else if (i === stepIdx) {
+                // Current active rung
+                const prevWord = currentLab[i-1].w;
+                const targetWord = item.w;
+                let display = "";
+                
+                // Compare letters to create blanks
+                for(let j=0; j < targetWord.length; j++) {
+                    display += (prevWord[j] !== targetWord[j]) ? "_" : prevWord[j];
+                }
+                
+                rung.innerText = display;
+                rung.classList.add('target');
+                document.getElementById('hint').innerText = item.h;
+            } 
+            else {
+                // Future locked rungs
+                let mask = "";
+                for(let j=0; j < item.w.length; j++) mask += "?";
+                rung.innerText = mask;
+                rung.classList.add('locked');
+            }
+            ladderDiv.appendChild(rung);
+        });
+
+        // Check if current lab is finished
+        if (stepIdx >= currentLab.length) {
+            handleLabComplete();
+        } else {
+            document.getElementById('nextBtn').style.display = 'none';
+            document.querySelectorAll('.key').forEach(b => b.disabled = false);
+        }
+    }
+
+    function guess(char) {
+        const currentLab = levels[currentLvlIdx].ladders[currentLabIdx];
+        const targetWord = currentLab[stepIdx].w;
+        const prevWord = currentLab[stepIdx-1].w;
+        
+        // Logic to find which letter needs to change
+        let correctChar = "";
+        for(let j=0; j < targetWord.length; j++) {
+            if (targetWord[j] !== prevWord[j]) {
+                correctChar = targetWord[j];
+                break;
+            }
+        }
+
+        const msg = document.getElementById('message');
+        if (char === correctChar) {
+            msg.style.color = "var(--success-green)";
+            msg.innerText = "✅ DATA SECURED";
+            stepIdx++;
+            render();
+        } else {
+            msg.style.color = "var(--error-red)";
+            msg.innerText = "❌ ANOMALY DETECTED";
+        }
+        
+        // Clear message after 1 second
+        setTimeout(() => msg.innerText = "", 1000);
+    }
+
+    function handleLabComplete() {
+        const isLastLab = currentLabIdx === 2;
+        const isLastLvl = currentLvlIdx === 2;
+        const btn = document.getElementById('nextBtn');
+        
+        if (isLastLab && isLastLvl) {
+            btn.innerText = "FINISH FINAL REPORT ➔";
+        } else if (isLastLab) {
+            btn.innerText = "LEVEL UP: RANK PROMOTION ➔";
+        } else {
+            btn.innerText = "NEXT EXPERIMENT ➔";
+        }
+        
+        btn.style.display = 'inline-block';
+        document.getElementById('hint').innerText = "DATA VERIFIED! Lab procedure complete.";
+        document.querySelectorAll('.key').forEach(b => b.disabled = true);
+    }
+
+    function handleNext() {
+        if (currentLabIdx < 2) {
+            currentLabIdx++;
+            stepIdx = 1;
+            initGame();
+        } else if (currentLvlIdx < 2) {
+            currentLvlIdx++;
+            currentLabIdx = 0;
+            stepIdx = 1;
+            initGame();
+        } else {
+            // Show Final Screen
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('final-screen').style.display = 'block';
+        }
+    }
+
+    // Start the game for the first time
+    initGame();
+</script>
+</body>
+</html>
