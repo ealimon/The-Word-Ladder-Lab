@@ -3,113 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Ladder Lab: The Full Journey</title>
+    <title>Word Ladder Lab: Master Edition</title>
     <style>
+        /* ========================================
+           COLOR THEMES 
+           ========================================
+        */
         :root {
-            /* Level 1 Colors (Blue) */
-            --lvl1: #00d4ff;
-            /* Level 2 Colors (Purple) */
-            --lvl2: #a855f7;
-            /* Level 3 Colors (Orange) */
-            --lvl3: #f59e0b;
+            --lvl1-accent: #00d4ff; /* Cyan - Junior */
+            --lvl2-accent: #a855f7; /* Purple - Senior */
+            --lvl3-accent: #f59e0b; /* Orange - Master */
             
-            --bg: #0f172a;
-            --rung-bg: #1e293b;
-            --text: #ffffff;
-            --success: #22c55e;
-            --error: #ef4444;
-            --current-accent: var(--lvl1);
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --text-light: #ffffff;
+            --success-green: #22c55e;
+            --error-red: #ef4444;
+            --hint-gold: #fbbf24;
+            
+            /* This variable updates via JavaScript when leveling up */
+            --current-accent: var(--lvl1-accent);
         }
+
+        /* ========================================
+           LAYOUT STYLES 
+           ========================================
+        */
         body {
             font-family: 'Courier New', monospace;
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            transition: background 0.5s ease;
+            overflow-x: hidden;
         }
+
         .lab-container {
-            width: 90%;
+            width: 95%;
             max-width: 550px;
-            background: #1e293b;
-            padding: 2rem;
+            background: var(--panel-bg);
+            padding: 2.5rem;
             border: 4px solid var(--current-accent);
-            border-radius: 20px;
+            border-radius: 24px;
             text-align: center;
-            box-shadow: 0 0 25px rgba(0,0,0,0.5);
-            transition: border-color 0.5s ease;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.8s ease;
         }
-        .lvl-tag { font-weight: bold; color: var(--current-accent); letter-spacing: 2px; }
-        h1 { margin: 10px 0; color: var(--text); }
-        
+
+        .lvl-tag {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--current-accent);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            transition: color 0.8s ease;
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: 1.8rem;
+        }
+
+        /* ========================================
+           LADDER VISUALS 
+           ========================================
+        */
         #ladder {
             display: flex;
             flex-direction: column-reverse; 
-            gap: 10px;
-            margin: 20px auto;
-            padding: 10px;
-            border-left: 10px solid #475569;
-            border-right: 10px solid #475569;
+            gap: 12px;
+            margin: 25px auto;
+            padding: 15px;
+            border-left: 12px solid #475569;
+            border-right: 12px solid #475569;
             width: fit-content;
-            min-width: 250px;
+            min-width: 280px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 4px;
         }
+
         .rung {
-            background: var(--rung-bg);
-            padding: 12px;
+            background: #2d3748;
+            padding: 14px;
             border-radius: 8px;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: bold;
-            letter-spacing: 8px;
+            letter-spacing: 10px;
             border: 2px solid transparent;
+            transition: all 0.3s ease;
         }
-        .rung.solved { color: var(--text); opacity: 0.8; }
+
+        .rung.solved {
+            color: var(--text-light);
+            opacity: 0.7;
+            background: transparent;
+        }
+
         .rung.target { 
             border-color: var(--current-accent); 
             color: var(--current-accent); 
-            background: #0f172a;
+            background: var(--bg-dark);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
         }
-        .rung.locked { color: #475569; }
 
-        .hint-text { color: #fbbf24; font-weight: bold; margin: 15px 0; min-height: 3em; }
-        .msg-text { height: 25px; margin-bottom: 10px; font-weight: bold; font-size: 1.2rem; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .rung.locked {
+            color: #475569;
+            letter-spacing: 10px;
+        }
+
+        /* ========================================
+           INTERFACE ELEMENTS 
+           ========================================
+        */
+        .hint-text {
+            color: var(--hint-gold);
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 3.5em;
+            font-size: 1.1rem;
+            line-height: 1.4;
+        }
+
+        .msg-text {
+            height: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
 
         .keyboard {
             display: grid;
             grid-template-columns: repeat(9, 1fr);
-            gap: 5px;
-            margin-top: 10px;
+            gap: 6px;
+            margin-top: 15px;
         }
+
         .key {
-            padding: 12px 5px;
+            padding: 15px 5px;
             background: var(--current-accent);
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             font-weight: bold;
+            font-family: inherit;
             cursor: pointer;
-            color: #0f172a;
-            transition: transform 0.1s;
+            color: var(--bg-dark);
+            font-size: 1.1rem;
+            transition: all 0.2s;
         }
-        .key:active { transform: scale(0.9); }
-        .key:disabled { background: #334155; cursor: not-allowed; opacity: 0.5; }
-        
+
+        .key:active { transform: translateY(3px); }
+
+        .key:disabled {
+            background: #334155;
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+
         .btn-action {
             display: none;
-            margin-top: 20px;
-            padding: 15px 30px;
-            background: var(--success);
+            margin-top: 25px;
+            padding: 18px 40px;
+            background: var(--success-green);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1.2rem;
+            border-radius: 12px;
+            font-size: 1.3rem;
             font-weight: bold;
             cursor: pointer;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
         }
 
         #final-screen { display: none; }
-        .badge { font-size: 6rem; margin: 20px 0; }
+        .badge-icon { font-size: 6rem; margin: 25px 0; }
+
     </style>
 </head>
 <body>
@@ -117,48 +194,58 @@
 <div class="lab-container" id="game-screen">
     <div id="level-display" class="lvl-tag">LEVEL 1: JUNIOR ASSISTANT</div>
     <h1 id="lab-title">🧪 Experiment 1/3</h1>
-    <div id="ladder"></div>
+    
+    <div id="ladder">
+        </div>
+
     <div id="message" class="msg-text"></div>
     <div id="hint" class="hint-text"></div>
-    <div id="keyboard" class="keyboard"></div>
+    
+    <div id="keyboard" class="keyboard">
+        </div>
+
     <button id="nextBtn" class="btn-action" onclick="handleNext()">NEXT EXPERIMENT ➔</button>
 </div>
 
 <div class="lab-container" id="final-screen">
-    <div class="lvl-tag">RANK: MASTER SCIENTIST</div>
-    <h1>🏆 ALL LABS COMPLETE!</h1>
-    <div class="badge">👨‍🔬</div>
-    <h2>Unbelievable Results!</h2>
-    <p>You have mastered CVC words, Blends, and 5-Letter structures.</p>
-    <button class="btn-action" style="display:inline-block; background: var(--lvl1);" onclick="location.reload()">RESTART ALL LEVELS</button>
+    <div class="lvl-tag" style="color: var(--lvl3-accent)">RANK: MASTER SCIENTIST</div>
+    <h1>🏆 MISSION COMPLETE</h1>
+    <div class="badge-icon">👨‍🔬</div>
+    <h2>Expert Scientist Certified!</h2>
+    <p>You have successfully completed all 9 Word Ladder Labs with perfect logic.</p>
+    <button class="btn-action" style="display:inline-block; background: var(--lvl1-accent);" onclick="location.reload()">RESTART ALL LABS</button>
 </div>
 
 <script>
+    /* ========================================
+       DATA MODELS
+       ========================================
+    */
     const levels = [
         {
             name: "LEVEL 1: JUNIOR ASSISTANT",
             color: "#00d4ff",
             ladders: [
                 [
-                    { w: "CAT", h: "Start: A common pet" },
-                    { w: "HAT", h: "Something you wear on your head" },
-                    { w: "HOT", h: "Opposite of cold" },
-                    { w: "POT", h: "Used for cooking soup" },
-                    { w: "DOT", h: "A tiny circle" }
+                    {w:"CAT", h:"Start: A common household pet"},
+                    {w:"HAT", h:"Change one sound: You wear this on your head"},
+                    {w:"HOT", h:"Change one sound: The sun feels like this"},
+                    {w:"POT", h:"Change one sound: Used for cooking soup"},
+                    {w:"DOT", h:"Change one sound: A tiny round circle"}
                 ],
                 [
-                    { w: "FIN", h: "Start: The part of a fish" },
-                    { w: "PIN", h: "Used to hold paper together" },
-                    { w: "PAN", h: "A flat dish for cooking" },
-                    { w: "MAN", h: "An adult male person" },
-                    { w: "FAN", h: "Used to cool off" }
+                    {w:"FIN", h:"Start: A fish uses this to swim"},
+                    {w:"PIN", h:"Change one sound: A sharp metal object"},
+                    {w:"PAN", h:"Change one sound: You fry eggs in this"},
+                    {w:"MAN", h:"Change one sound: An adult male"},
+                    {w:"FAN", h:"Change one sound: Blows cool air"}
                 ],
                 [
-                    { w: "MUG", h: "Start: A large drinking cup" },
-                    { w: "BUG", h: "A small insect" },
-                    { w: "BAG", h: "Something to carry groceries in" },
-                    { w: "RAG", h: "A cloth used for cleaning" },
-                    { w: "RAT", h: "A large mouse" }
+                    {w:"MUG", h:"Start: A large cup for cocoa"},
+                    {w:"BUG", h:"Change one sound: A tiny crawling insect"},
+                    {w:"BAG", h:"Change one sound: Used to carry things"},
+                    {w:"RAG", h:"Change one sound: Used for cleaning spills"},
+                    {w:"RAT", h:"Change one sound: A large rodent"}
                 ]
             ]
         },
@@ -167,25 +254,25 @@
             color: "#a855f7",
             ladders: [
                 [
-                    { w: "SHIP", h: "Start: A large boat" },
-                    { w: "SHOP", h: "A place where you buy things" },
-                    { w: "CHOP", h: "To cut with an axe" },
-                    { w: "CHIP", h: "A small piece of a potato" },
-                    { w: "CLIP", h: "Used to hold papers together" }
+                    {w:"SHIP", h:"Start: A large boat on the ocean"},
+                    {w:"SHOP", h:"Change one sound: To buy things at a store"},
+                    {w:"CHOP", h:"Change one sound: To cut with an axe"},
+                    {w:"CHIP", h:"Change one sound: A small piece of a potato"},
+                    {w:"CLIP", h:"Change one sound: Used to hold papers together"}
                 ],
                 [
-                    { w: "FAST", h: "Start: To move very quickly" },
-                    { w: "LAST", h: "The opposite of first" },
-                    { w: "LIST", h: "Things written down to remember" },
-                    { w: "FIST", h: "A closed hand" },
-                    { w: "FISH", h: "An animal that swims" }
+                    {w:"FAST", h:"Start: Moving with great speed"},
+                    {w:"LAST", h:"Change one sound: The opposite of first"},
+                    {w:"LIST", h:"Change one sound: A set of written items"},
+                    {w:"FIST", h:"Change one sound: A hand closed tight"},
+                    {w:"FISH", h:"Change one sound: An animal with gills"}
                 ],
                 [
-                    { w: "FROG", h: "Start: A green jumping animal" },
-                    { w: "FROM", h: "Where did you come ____?" },
-                    { w: "DRUM", h: "A musical instrument you hit" },
-                    { w: "DRAG", h: "To pull something heavy" },
-                    { w: "BRAG", h: "To talk proudly about yourself" }
+                    {w:"GRAB", h:"Start: To take something suddenly"},
+                    {w:"GRAM", h:"Change one sound: A small unit of weight"},
+                    {w:"TRAM", h:"Change one sound: An electric streetcar"},
+                    {w:"TRAP", h:"Change one sound: Used to catch something"},
+                    {w:"TRIP", h:"Change one sound: To stumble or a vacation"}
                 ]
             ]
         },
@@ -194,147 +281,51 @@
             color: "#f59e0b",
             ladders: [
                 [
-                    { w: "CLOCK", h: "Start: It tells you the time" },
-                    { w: "BLOCK", h: "A toy cube or a city square" },
-                    { w: "BLACK", h: "The darkest color" },
-                    { w: "TRACK", h: "A path for a train or runner" },
-                    { w: "TRICK", h: "A magic stunt or a joke" }
+                    {w:"CLOCK", h:"Start: It tells you the time"},
+                    {w:"BLOCK", h:"Change one sound: A toy cube or city square"},
+                    {w:"BLACK", h:"Change one sound: The darkest color"},
+                    {w:"SLACK", h:"Change one sound: Not tight or loose"},
+                    {w:"STACK", h:"Change one sound: A neat pile of things"}
                 ],
                 [
-                    { w: "STAMP", h: "Start: Put this on an envelope" },
-                    { w: "STUMP", h: "The bottom part of a cut tree" },
-                    { w: "SLUMP", h: "To sit or stand lazily" },
-                    { w: "CLUMP", h: "A small group of trees or dirt" },
-                    { w: "CLAMP", h: "A tool used to hold things tight" }
+                    {w:"STAMP", h:"Start: Put this on a letter"},
+                    {w:"STUMP", h:"Change one sound: Bottom of a cut tree"},
+                    {w:"SLUMP", h:"Change one sound: To sit or stand lazily"},
+                    {w:"CLUMP", h:"Change one sound: A small group or cluster"},
+                    {w:"CLAMP", h:"Change one sound: A tool to hold things tight"}
                 ],
                 [
-                    { w: "SHIRT", h: "Start: Clothing for your top half" },
-                    { w: "SHORT", h: "Opposite of tall" },
-                    { w: "SHOUT", h: "To yell loudly" },
-                    { w: "SHOOT", h: "To kick a ball at a goal" },
-                    { w: "SHEET", h: "A thin piece of paper or fabric" }
+                    {w:"SHIRT", h:"Start: Clothing for your upper body"},
+                    {w:"SHORT", h:"Change one sound: The opposite of tall"},
+                    {w:"SHORE", h:"Change one sound: Where the land meets the sea"},
+                    {w:"SHARE", h:"Change one sound: To give some to a friend"},
+                    {w:"SHAPE", h:"Change one sound: A circle, square, or triangle"}
                 ]
             ]
         }
     ];
 
+    /* ========================================
+       GAME STATE
+       ========================================
+    */
     let currentLvlIdx = 0;
     let currentLabIdx = 0;
     let stepIdx = 1;
 
+    /* ========================================
+       CORE FUNCTIONS
+       ========================================
+    */
     function initGame() {
         const lvl = levels[currentLvlIdx];
+        
+        // Update UI colors and text
         document.documentElement.style.setProperty('--current-accent', lvl.color);
         document.getElementById('level-display').innerText = lvl.name;
         document.getElementById('lab-title').innerText = `🧪 Experiment ${currentLabIdx + 1}/3`;
         
+        // Build Keyboard
         const kb = document.getElementById('keyboard');
         kb.innerHTML = '';
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(char => {
-            const btn = document.createElement('button');
-            btn.className = 'key';
-            btn.innerText = char;
-            btn.onclick = () => guess(char);
-            kb.appendChild(btn);
-        });
-        render();
-    }
-
-    function render() {
-        const ladderDiv = document.getElementById('ladder');
-        const currentLab = levels[currentLvlIdx].ladders[currentLabIdx];
-        ladderDiv.innerHTML = '';
-
-        currentLab.forEach((item, i) => {
-            const rung = document.createElement('div');
-            rung.classList.add('rung');
-            if (i < stepIdx) {
-                rung.innerText = item.w;
-                rung.classList.add('solved');
-            } else if (i === stepIdx) {
-                const prevWord = currentLab[i-1].w;
-                const targetWord = item.w;
-                let display = "";
-                for(let j=0; j<targetWord.length; j++) {
-                    display += (prevWord[j] !== targetWord[j]) ? "_" : prevWord[j];
-                }
-                rung.innerText = display;
-                rung.classList.add('target');
-                document.getElementById('hint').innerText = item.h;
-            } else {
-                let mask = "";
-                for(let j=0; j<item.w.length; j++) mask += "?";
-                rung.innerText = mask;
-                rung.classList.add('locked');
-            }
-            ladderDiv.appendChild(rung);
-        });
-
-        if (stepIdx >= currentLab.length) {
-            const isLastLab = currentLabIdx === 2;
-            const isLastLvl = currentLvlIdx === 2;
-            
-            if (isLastLab && isLastLvl) {
-                document.getElementById('nextBtn').innerText = "FINISH FINAL REPORT ➔";
-            } else if (isLastLab) {
-                document.getElementById('nextBtn').innerText = "LEVEL UP ➔";
-            } else {
-                document.getElementById('nextBtn').innerText = "NEXT EXPERIMENT ➔";
-            }
-            
-            document.getElementById('nextBtn').style.display = 'inline-block';
-            document.querySelectorAll('.key').forEach(b => b.disabled = true);
-            document.getElementById('hint').innerText = "DATA VERIFIED! Ready to proceed?";
-        } else {
-            document.getElementById('nextBtn').style.display = 'none';
-            document.querySelectorAll('.key').forEach(b => b.disabled = false);
-        }
-    }
-
-    function guess(char) {
-        const currentLab = levels[currentLvlIdx].ladders[currentLabIdx];
-        if (stepIdx >= currentLab.length) return;
-
-        const targetWord = currentLab[stepIdx].w;
-        const prevWord = currentLab[stepIdx-1].w;
-        let correctChar = "";
-        for(let j=0; j<targetWord.length; j++) {
-            if (targetWord[j] !== prevWord[j]) correctChar = targetWord[j];
-        }
-
-        const msg = document.getElementById('message');
-        if (char === correctChar) {
-            msg.style.color = "var(--success)";
-            msg.innerText = "✅ DATA SECURED";
-            stepIdx++;
-            render();
-        } else {
-            msg.style.color = "var(--error)";
-            msg.innerText = "❌ ANOMALY DETECTED";
-        }
-        setTimeout(() => msg.innerText = "", 1000);
-    }
-
-    function handleNext() {
-        if (currentLabIdx < 2) {
-            // Move to next lab in current level
-            currentLabIdx++;
-            stepIdx = 1;
-            initGame();
-        } else if (currentLvlIdx < 2) {
-            // Move to next level
-            currentLvlIdx++;
-            currentLabIdx = 0;
-            stepIdx = 1;
-            initGame();
-        } else {
-            // Show Final Screen
-            document.getElementById('game-screen').style.display = 'none';
-            document.getElementById('final-screen').style.display = 'block';
-        }
-    }
-
-    initGame();
-</script>
-</body>
-</html>
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").
