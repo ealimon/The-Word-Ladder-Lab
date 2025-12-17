@@ -65,7 +65,7 @@
         }
         .rung.locked { color: #475569; }
 
-        .hint-text { color: var(--accent); font-weight: bold; margin: 15px 0; min-height: 1.2em; }
+        .hint-text { color: var(--accent); font-weight: bold; margin: 15px 0; min-height: 2.5em; line-height: 1.2; }
         .msg-text { height: 25px; margin-bottom: 10px; font-weight: bold; }
 
         .keyboard {
@@ -81,6 +81,7 @@
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
+            color: #0f172a;
         }
         .key:disabled { background: #334155; cursor: not-allowed; opacity: 0.5; }
         
@@ -97,7 +98,6 @@
             cursor: pointer;
         }
 
-        /* Final Certificate Style */
         #final-screen { display: none; }
         .badge { font-size: 5rem; margin: 20px 0; }
     </style>
@@ -139,10 +139,10 @@
         ],
         [
             { w: "MUG", h: "Start: A large drinking cup" },
-            { w: "MOP", h: "Used to clean the floor" },
-            { w: "MAP", h: "Shows you where to go" },
-            { w: "MAT", h: "A piece of fabric on the floor" },
-            { w: "CAT", h: "A common pet" }
+            { w: "BUG", h: "Climb 1: A small insect" },
+            { w: "BAG", h: "Climb 2: Something to carry groceries in" },
+            { w: "RAG", h: "Climb 3: A piece of cloth used for cleaning" },
+            { w: "RAT", h: "Climb 4: A large mouse" }
         ]
     ];
 
@@ -153,7 +153,11 @@
         const kb = document.getElementById('keyboard');
         kb.innerHTML = '';
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(char => {
-            kb.innerHTML += `<button class="key" onclick="guess('${char}')">${char}</button>`;
+            const btn = document.createElement('button');
+            btn.className = 'key';
+            btn.innerText = char;
+            btn.onclick = () => guess(char);
+            kb.appendChild(btn);
         });
         render();
     }
@@ -173,7 +177,7 @@
                 const prevWord = currentLab[i-1].w;
                 const targetWord = item.w;
                 let display = "";
-                for(let j=0; j<3; j++) {
+                for(let j=0; j<targetWord.length; j++) {
                     display += (prevWord[j] !== targetWord[j]) ? "_" : prevWord[j];
                 }
                 rung.innerText = display;
@@ -194,15 +198,19 @@
             document.querySelectorAll('.key').forEach(b => b.disabled = true);
         } else {
             document.getElementById('nextBtn').style.display = 'none';
+            document.querySelectorAll('.key').forEach(b => b.disabled = false);
         }
     }
 
     function guess(char) {
         const currentLab = allLadders[labIdx];
+        if (stepIdx >= currentLab.length) return;
+
         const targetWord = currentLab[stepIdx].w;
         const prevWord = currentLab[stepIdx-1].w;
+        
         let correctChar = "";
-        for(let j=0; j<3; j++) {
+        for(let j=0; j<targetWord.length; j++) {
             if (targetWord[j] !== prevWord[j]) correctChar = targetWord[j];
         }
 
@@ -225,7 +233,6 @@
             stepIdx = 1;
             initGame();
         } else {
-            // Show Final Screen
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('final-screen').style.display = 'block';
         }
